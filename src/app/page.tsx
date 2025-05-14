@@ -8,22 +8,34 @@ import { EmailJSResponseStatus } from '@emailjs/browser';
 
 export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-    if (publicKey) {
-      emailjs.init(publicKey);
+    if (!publicKey) {
+      console.error('EmailJS public key is not set');
+      return;
     }
+    emailjs.init(publicKey);
   }, []);
 
   const sendEmail = async (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<EmailJSResponseStatus> => {
-    const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
-    const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
+    const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
     
+    if (!serviceID || !templateID) {
+      const error = 'EmailJS configuration is missing';
+      console.error(error, { serviceID, templateID });
+      throw new Error(error);
+    }
+
     try {
-      return await emailjs.send(serviceID, templateID, values);
+      console.log('Sending email with:', { serviceID, templateID, values });
+      const result = await emailjs.send(serviceID, templateID, values);
+      console.log('Email sent successfully:', result);
+      return result;
     } catch (error) {
-      console.error('Email send error:', error);
+      console.error('Failed to send email:', error);
       throw error;
     }
   };
@@ -69,19 +81,19 @@ export default function HomePage() {
               .min(10, 'At least 10 characters')
               .required('Required'),
           })}
-          onSubmit={(values, { setSubmitting, resetForm }) => {
+          onSubmit={async (values, { setSubmitting, resetForm }) => {
             setMessageSent(false);
-            sendEmail(values)
-              .then(() => {
-                setMessageSent(true);
-                resetForm();
-              })
-              .catch((error) => {
-                console.error('Email send error:', error);
-              })
-              .finally(() => {
-                setSubmitting(false);
-              });
+            setError(null);
+            try {
+              await sendEmail(values);
+              setMessageSent(true);
+              resetForm();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Failed to send message');
+              console.error('Submit error:', err);
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
           {({ isSubmitting }) => (
@@ -179,7 +191,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition"
+                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
@@ -188,6 +200,13 @@ export default function HomePage() {
               {messageSent && (
                 <p className="text-center text-green-400 font-medium mt-4">
                   ✅ Your message has been sent!
+                </p>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <p className="text-center text-red-400 font-medium mt-4">
+                  ❌ {error}
                 </p>
               )}
             </Form>
