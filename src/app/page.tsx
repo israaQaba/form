@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import emailjs from '@emailjs/browser';
@@ -9,11 +9,23 @@ import { EmailJSResponseStatus } from '@emailjs/browser';
 export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
 
-  const sendEmail = (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<EmailJSResponseStatus> => {
+  useEffect(() => {
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    if (publicKey) {
+      emailjs.init(publicKey);
+    }
+  }, []);
+
+  const sendEmail = async (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<EmailJSResponseStatus> => {
     const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
     const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
-    return emailjs.send(serviceID, templateID, values, publicKey);
+    
+    try {
+      return await emailjs.send(serviceID, templateID, values);
+    } catch (error) {
+      console.error('Email send error:', error);
+      throw error;
+    }
   };
 
   const cutoffDate = new Date();
