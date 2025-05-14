@@ -18,8 +18,11 @@ export default function HomePage() {
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
         values
       );
-    } catch (_error) {
-      throw new Error('Failed to send message. Please try again later.');
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message
+        : 'Failed to send message. Please try again later.';
+      throw new Error(errorMessage);
     }
   };
 
