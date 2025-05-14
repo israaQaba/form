@@ -8,11 +8,11 @@ import emailjs from 'emailjs-com';
 export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
 
-  const sendEmail = (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }) => {
+  const sendEmail = (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<void> => {
     const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
     const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
-    return emailjs.send(serviceID, templateID, values, publicKey);
+    return emailjs.send(serviceID, templateID, values, publicKey) as Promise<void>;
   };
 
   const cutoffDate = new Date();
