@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { EmailJSResponseStatus } from 'emailjs-com';
+import emailjs from '@emailjs/browser';
+import { EmailJSResponseStatus } from '@emailjs/browser';
 
 export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
