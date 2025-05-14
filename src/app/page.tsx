@@ -8,22 +8,14 @@ import { EmailJSResponseStatus } from '@emailjs/browser';
 
 export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const sendEmail = async (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<EmailJSResponseStatus> => {
-    try {
-      emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!);
-      return await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        values
-      );
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message
-        : 'Failed to send message. Please try again later.';
-      throw new Error(errorMessage);
-    }
+    emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!);
+    return emailjs.send(
+      process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+      process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+      values
+    );
   };
 
   return (
@@ -65,15 +57,10 @@ export default function HomePage() {
               .required('Required'),
           })}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
-            setError(null);
-            setMessageSent(false);
-            
             try {
               await sendEmail(values);
               setMessageSent(true);
               resetForm();
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'Failed to send message');
             } finally {
               setSubmitting(false);
             }
@@ -183,13 +170,6 @@ export default function HomePage() {
               {messageSent && (
                 <p className="text-center text-green-400 font-medium mt-4">
                   ✅ Your message has been sent!
-                </p>
-              )}
-
-              {/* Error Message */}
-              {error && (
-                <p className="text-center text-red-400 font-medium mt-4">
-                  ❌ {error}
                 </p>
               )}
             </Form>
