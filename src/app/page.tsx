@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import emailjs from '@emailjs/browser';
@@ -10,38 +10,18 @@ export default function HomePage() {
   const [messageSent, setMessageSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-    if (!publicKey) {
-      console.error('EmailJS public key is not set');
-      return;
-    }
-    emailjs.init(publicKey);
-  }, []);
-
   const sendEmail = async (values: { name: string; surname: string; email: string; country: string; dob: string; message: string }): Promise<EmailJSResponseStatus> => {
-    const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-    
-    if (!serviceID || !templateID) {
-      const error = 'EmailJS configuration is missing';
-      console.error(error, { serviceID, templateID });
-      throw new Error(error);
-    }
-
     try {
-      console.log('Sending email with:', { serviceID, templateID, values });
-      const result = await emailjs.send(serviceID, templateID, values);
-      console.log('Email sent successfully:', result);
-      return result;
+      emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!);
+      return await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+        values
+      );
     } catch (error) {
-      console.error('Failed to send email:', error);
-      throw error;
+      throw new Error('Failed to send message. Please try again later.');
     }
   };
-
-  const cutoffDate = new Date();
-  cutoffDate.setFullYear(cutoffDate.getFullYear() - 16);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 p-6">
@@ -82,15 +62,15 @@ export default function HomePage() {
               .required('Required'),
           })}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
-            setMessageSent(false);
             setError(null);
+            setMessageSent(false);
+            
             try {
               await sendEmail(values);
               setMessageSent(true);
               resetForm();
             } catch (err) {
               setError(err instanceof Error ? err.message : 'Failed to send message');
-              console.error('Submit error:', err);
             } finally {
               setSubmitting(false);
             }
@@ -151,7 +131,7 @@ export default function HomePage() {
                   <Field
                     name="dob"
                     type="date"
-                    max={cutoffDate.toISOString().split('T')[0]}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 16)).toISOString().split('T')[0]}
                     className="mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <ErrorMessage name="dob" component="div" className="text-red-400 text-sm mt-1" />
