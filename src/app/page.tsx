@@ -19,7 +19,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-6">
+    <div className="min-h-screen flex items-center justify-center bg-green p-6">
       <div className="bg-gray-800 shadow-2xl rounded-3xl p-12 w-full max-w-2xl">
         <h2 className="text-4xl font-extrabold text-center mb-8 text-indigo-300">
           Get in Touch
